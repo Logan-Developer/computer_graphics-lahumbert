@@ -16,40 +16,48 @@ using namespace std;
 
 void initWindow()
 {
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
-    glutInitWindowPosition(80, 80);
-    glutInitWindowSize(SCREEN_X, SCREEN_Y);
+  glutInitWindowPosition(80, 80);
+  glutInitWindowSize(SCREEN_X, SCREEN_Y);
 
-    glutCreateWindow(WINDOW_TITLE.c_str());
+  glutCreateWindow(WINDOW_TITLE.c_str());
+
+  //  Enable Z-buffer depth test
+  glEnable(GL_DEPTH_TEST);
 }
 
-void initGlew() {
-    GLenum err=glewInit();
-    if (err!=GLEW_OK) {
-      cerr << "GLEW NOT OK:" << err << endl;
-      cerr << "Message" << glewGetErrorString(err)<< endl;
-    }
-    if (!GLEW_VERSION_2_1) {
-      cerr << "GLEW NOT 2.1 or better" <<endl;
-    }
+void initGlew()
+{
+  GLenum err = glewInit();
+  if (err != GLEW_OK)
+  {
+    cerr << "GLEW NOT OK:" << err << endl;
+    cerr << "Message" << glewGetErrorString(err) << endl;
+  }
+  if (!GLEW_VERSION_2_1)
+  {
+    cerr << "GLEW NOT 2.1 or better" << endl;
+  }
 }
 
-void display() {
-    glClearColor(0.0, 0.0, 0.0, 0.0); // Set background color to black and opaque
-    glClear(GL_COLOR_BUFFER_BIT);     // Clear the color buffer (background)
+void display()
+{
+  glClearColor(0.0, 0.0, 0.0, 0.0);                   // Set background color to black and opaque
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the color buffer (background)
 
-    glFlush();  // Render now
+  glFlush();
+  glutSwapBuffers();
 }
 
 int main(int argc, char **argv)
 {
-    glutInit(&argc, argv);
-    initWindow();
+  glutInit(&argc, argv);
+  initWindow();
 
-    initGlew();
+  initGlew();
 
-    glutDisplayFunc(display);
-    glutMainLoop();
-    return 0;
+  glutDisplayFunc(display);
+  glutMainLoop();
+  return 0;
 }
