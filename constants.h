@@ -1,5 +1,7 @@
 /// @brief This file contains all the constants used in the program
 
+#include <string>
+
 using namespace std;
 
 const string WINDOW_TITLE = "A simple simulation";
