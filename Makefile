@@ -8,7 +8,7 @@ ifeq (${OS},Windows_NT)
 else
 	EXE=${PROJECT}
 	CPPFLAGS=-g
-	LDFLAGS=-lGL -lglut -lglfw -lGLEW
+	LDFLAGS=-lGL -lglut -lglfw -lGLEW -lGLU
 endif
 
 
