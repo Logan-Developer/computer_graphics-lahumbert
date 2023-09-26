@@ -1,219 +1,221 @@
-#include <GL/glut.h>
-#include <math.h>
+#include <iostream>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-#include "constants.h"
+const GLuint WIDTH = 800;
+const GLuint HEIGHT = 600;
+const GLfloat cameraSpeed = 0.05f;
 
-#define FPS 60
-#define TO_RADIANS 3.14/180.0
+const char* vertexShaderSource = R"(
+    #version 330 core
+    layout(location = 0) in vec3 inPosition;
+    uniform mat4 viewMatrix;
+    uniform mat4 projectionMatrix;
+    void main()
+    {
+        mat4 mvpMatrix = projectionMatrix * viewMatrix;
+        gl_Position = mvpMatrix * vec4(inPosition, 1.0);
+    }
+)";
 
-float pitch = 0.0, yaw= 0.0;
-float camX=0.0,camZ=0.0;
+const char* fragmentShaderSource = R"(
+    #version 330 core
+    out vec4 FragColor;
+    void main()
+    {
+        FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    }
+)";
 
-void display();
-void reshape(int w,int h);
-void timer(int);
-void passive_motion(int,int);
-void camera();
-void keyboard(unsigned char key,int x,int y);
-void keyboard_up(unsigned char key,int x,int y);
+// Camera position and orientation
+glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-struct Motion
+GLfloat yaw = -90.0f;
+GLfloat pitch = 0.0f;
+bool firstMouse = true;
+GLfloat lastX = WIDTH / 2.0f;
+GLfloat lastY = HEIGHT / 2.0f;
+
+// Callback function to handle mouse input
+void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
-    bool Forward,Backward,Left,Right;
-};
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
 
-Motion motion = {false,false,false,false};
+    GLfloat xoffset = xpos - lastX;
+    GLfloat yoffset = lastY - ypos; // Reversed since y-coordinates range from bottom to top
 
-void init()
-{
-    glutSetCursor(GLUT_CURSOR_NONE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glutWarpPointer(SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
+    lastX = xpos;
+    lastY = ypos;
+
+    const GLfloat sensitivity = 0.05f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // Constrain pitch to prevent camera flipping
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+    // Calculate new front vector
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);
 }
 
-int main(int argc,char**argv)
+// Process keyboard input to move the camera
+void processInput(GLFWwindow* window)
 {
-    glutInit(&argc,argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(SCREEN_WIDTH,SCREEN_HEIGHT);
-    glutCreateWindow(WINDOW_TITLE.c_str());
+    GLfloat cameraSpeed = 0.05f;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPosition += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPosition -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+}
 
-    init();
-    glutDisplayFunc(display);
-    glutReshapeFunc(reshape);
-    glutPassiveMotionFunc(passive_motion);
-    glutTimerFunc(0,timer,0);    //more info about this is given below at definition of timer()
-    glutKeyboardFunc(keyboard);
-    glutKeyboardUpFunc(keyboard_up);
+int main()
+{
+    // Initialize GLFW
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return -1;
+    }
 
-    glutMainLoop();
+    // Create a GLFW window
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "User-Controlled View", NULL, NULL);
+    if (!window)
+    {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+
+    glfwMakeContextCurrent(window);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    // Initialize GLEW
+    if (glewInit() != GLEW_OK)
+    {
+        std::cerr << "Failed to initialize GLEW" << std::endl;
+        return -1;
+    }
+
+    // Create and compile the vertex shader
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    // Check for vertex shader compilation errors
+    GLint success;
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        GLchar infoLog[512];
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cerr << "Vertex shader compilation failed: " << infoLog << std::endl;
+    }
+
+    // Create the shader program and link the vertex shader
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glLinkProgram(shaderProgram);
+
+    // Check for shader program linkage errors
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        GLchar infoLog[512];
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "Shader program linkage failed: " << infoLog << std::endl;
+    }
+
+    glDeleteShader(vertexShader);
+
+    // Define the 3D object's vertices (e.g., a simple triangle)
+    GLfloat vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f
+    };
+
+    // Create a vertex buffer object (VBO) and vertex array object (VAO)
+    GLuint VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+
+    // Set up the projection matrix (perspective projection)
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+
+    // Main rendering loop
+    while (!glfwWindowShouldClose(window))
+    {
+        // Poll for and process events
+        glfwPollEvents();
+
+        // Process keyboard input to move the camera
+        processInput(window);
+
+        // Clear the screen
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Set up the view matrix (user-controlled view)
+        glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+
+        // Use the shader program
+        glUseProgram(shaderProgram);
+
+        // Set the view matrix and projection matrix uniforms in the shader
+        GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "viewMatrix");
+        glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+        GLuint projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+        glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+        // Draw the 3D object
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
+
+        // Swap the screen buffers
+        glfwSwapBuffers(window);
+    }
+
+    // Clean up and exit
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProgram);
+
+    glfwTerminate();
+
     return 0;
-}
-
-/* This function just draws the scene. I used Texture mapping to draw
-   a chessboard like surface. If this is too complicated for you ,
-   you can just use a simple quadrilateral */
-
-void draw()
-{
-    glEnable(GL_TEXTURE_2D);
-    GLuint texture;
-    glGenTextures(1,&texture);
-
-    unsigned char texture_data[2][2][4] =
-                    {
-                        0,0,0,255,  255,255,255,255,
-                        255,255,255,255,    0,0,0,255
-                    };
-
-    glBindTexture(GL_TEXTURE_2D,texture);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,2,2,0,GL_RGBA,GL_UNSIGNED_BYTE,texture_data);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                    GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_NEAREST);
-
-    glBegin(GL_QUADS);
-
-    glTexCoord2f(0.0,0.0);  glVertex3f(-50.0,-5.0,-50.0);
-    glTexCoord2f(25.0,0.0);  glVertex3f(50.0,-5.0,-50.0);
-    glTexCoord2f(25.0,25.0);  glVertex3f(50.0,-5.0,50.0);
-    glTexCoord2f(0.0,25.0);  glVertex3f(-50.0,-5.0,50.0);
-
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
-}
-
-void display()
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    camera();
-    draw();
-
-    glutSwapBuffers();
-}
-
-void reshape(int w,int h)
-{
-    glViewport(0,0,w,h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(60,16.0/9.0,1,75);
-    glMatrixMode(GL_MODELVIEW);
-
-}
-
-
-/*this funtion is used to keep calling the display function periodically
-  at a rate of FPS times in one second. The constant FPS is defined above and
-  has the value of 60
-*/
-void timer(int)
-{
-    glutPostRedisplay();
-    glutWarpPointer(SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
-    glutTimerFunc(1000/FPS,timer,0);
-}
-
-void passive_motion(int x,int y)
-{
-    /* two variables to store X and Y coordinates, as observed from the center
-      of the window
-    */
-    int dev_x,dev_y;
-    dev_x = (SCREEN_WIDTH/2)-x;
-    dev_y = (SCREEN_HEIGHT/2)-y;
-
-    /* apply the changes to pitch and yaw*/
-    yaw+=(float)dev_x/10.0;
-    pitch+=(float)dev_y/10.0;
-}
-
-void camera()
-{
-
-    if(motion.Forward)
-    {
-        camX += cos((yaw+90)*TO_RADIANS)/5.0;
-        camZ -= sin((yaw+90)*TO_RADIANS)/5.0;
-    }
-    if(motion.Backward)
-    {
-        camX += cos((yaw+90+180)*TO_RADIANS)/5.0;
-        camZ -= sin((yaw+90+180)*TO_RADIANS)/5.0;
-    }
-    if(motion.Left)
-    {
-        camX += cos((yaw+90+90)*TO_RADIANS)/5.0;
-        camZ -= sin((yaw+90+90)*TO_RADIANS)/5.0;
-    }
-    if(motion.Right)
-    {
-        camX += cos((yaw+90-90)*TO_RADIANS)/5.0;
-        camZ -= sin((yaw+90-90)*TO_RADIANS)/5.0;
-    }
-
-    /*limit the values of pitch
-      between -60 and 70
-    */
-    if(pitch>=70)
-        pitch = 70;
-    if(pitch<=-60)
-        pitch=-60;
-
-    glRotatef(-pitch,1.0,0.0,0.0); // Along X axis
-    glRotatef(-yaw,0.0,1.0,0.0);    //Along Y axis
-
-    glTranslatef(-camX,0.0,-camZ);
-}
-
-void keyboard(unsigned char key,int x,int y)
-{
-    switch(key)
-    {
-    case 'W':
-    case 'w':
-        motion.Forward = true;
-        break;
-    case 'A':
-    case 'a':
-        motion.Left = true;
-        break;
-    case 'S':
-    case 's':
-        motion.Backward = true;
-        break;
-    case 'D':
-    case 'd':
-        motion.Right = true;
-        break;
-    }
-}
-void keyboard_up(unsigned char key,int x,int y)
-{
-    switch(key)
-    {
-    case 'W':
-    case 'w':
-        motion.Forward = false;
-        break;
-    case 'A':
-    case 'a':
-        motion.Left = false;
-        break;
-    case 'S':
-    case 's':
-        motion.Backward = false;
-        break;
-    case 'D':
-    case 'd':
-        motion.Right = false;
-        break;
-    }
 }
