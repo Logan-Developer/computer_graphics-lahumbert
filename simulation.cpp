@@ -5,30 +5,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-const GLuint WIDTH = 800;
-const GLuint HEIGHT = 600;
+#include <fstream>
+
+#include "constants.h"
+
 const GLfloat cameraSpeed = 0.05f;
-
-const char* vertexShaderSource = R"(
-    #version 330 core
-    layout(location = 0) in vec3 inPosition;
-    uniform mat4 viewMatrix;
-    uniform mat4 projectionMatrix;
-    void main()
-    {
-        mat4 mvpMatrix = projectionMatrix * viewMatrix;
-        gl_Position = mvpMatrix * vec4(inPosition, 1.0);
-    }
-)";
-
-const char* fragmentShaderSource = R"(
-    #version 330 core
-    out vec4 FragColor;
-    void main()
-    {
-        FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-    }
-)";
 
 // Camera position and orientation
 glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -38,11 +19,11 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 GLfloat yaw = -90.0f;
 GLfloat pitch = 0.0f;
 bool firstMouse = true;
-GLfloat lastX = WIDTH / 2.0f;
-GLfloat lastY = HEIGHT / 2.0f;
+GLfloat lastX = WINDOW_WIDTH / 2.0f;
+GLfloat lastY = WINDOW_HEIGHT / 2.0f;
 
 // Callback function to handle mouse input
-void mouseCallback(GLFWwindow* window, double xpos, double ypos)
+void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 {
     if (firstMouse)
     {
@@ -79,7 +60,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 }
 
 // Process keyboard input to move the camera
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow *window)
 {
     GLfloat cameraSpeed = 0.05f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -102,7 +83,7 @@ int main()
     }
 
     // Create a GLFW window
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "User-Controlled View", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE.c_str(), NULL, NULL);
     if (!window)
     {
         std::cerr << "Failed to create GLFW window" << std::endl;
@@ -123,7 +104,16 @@ int main()
 
     // Create and compile the vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    char *buffer;
+    fstream in;
+
+    buffer = (char *)malloc(10000);
+    in.open("shaders/vertex/camera.vert.glsl", ios::in);
+    in.read(buffer, 10000);
+    buffer[in.gcount()] = 0;
+    in.close();
+    glShaderSource(vertexShader, 1, (const char **)&buffer, NULL);
+    free(buffer);
     glCompileShader(vertexShader);
 
     // Check for vertex shader compilation errors
@@ -155,9 +145,8 @@ int main()
     // Define the 3D object's vertices (e.g., a simple triangle)
     GLfloat vertices[] = {
         -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
-    };
+        0.5f, -0.5f, 0.0f,
+        0.0f, 0.5f, 0.0f};
 
     // Create a vertex buffer object (VBO) and vertex array object (VAO)
     GLuint VBO, VAO;
@@ -168,12 +157,12 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 
     // Set up the projection matrix (perspective projection)
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)WINDOW_WIDTH / (GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
 
     // Main rendering loop
     while (!glfwWindowShouldClose(window))
