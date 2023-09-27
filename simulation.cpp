@@ -1,4 +1,3 @@
-#include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -6,8 +5,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
+#include <iostream>
 
 #include "constants.h"
+#include "shaders.h"
 
 const GLfloat cameraSpeed = 0.05f;
 
@@ -102,45 +103,8 @@ int main()
         return -1;
     }
 
-    // Create and compile the vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    char *buffer;
-    fstream in;
-
-    buffer = (char *)malloc(10000);
-    in.open("shaders/vertex/camera.vert.glsl", ios::in);
-    in.read(buffer, 10000);
-    buffer[in.gcount()] = 0;
-    in.close();
-    glShaderSource(vertexShader, 1, (const char **)&buffer, NULL);
-    free(buffer);
-    glCompileShader(vertexShader);
-
-    // Check for vertex shader compilation errors
-    GLint success;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        GLchar infoLog[512];
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cerr << "Vertex shader compilation failed: " << infoLog << std::endl;
-    }
-
-    // Create the shader program and link the vertex shader
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glLinkProgram(shaderProgram);
-
-    // Check for shader program linkage errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        GLchar infoLog[512];
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cerr << "Shader program linkage failed: " << infoLog << std::endl;
-    }
-
-    glDeleteShader(vertexShader);
+    Shaders shaders;
+    GLuint shaderProgram = shaders.getShaderProgram();
 
     // Define the 3D object's vertices (e.g., a simple triangle)
     GLfloat vertices[] = {
@@ -202,7 +166,6 @@ int main()
     // Clean up and exit
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
 
     glfwTerminate();
 
