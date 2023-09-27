@@ -19,38 +19,30 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 GLfloat yaw = -90.0f;
 GLfloat pitch = 0.0f;
-bool firstMouse = true;
+
 GLfloat lastX = WINDOW_WIDTH / 2.0f;
 GLfloat lastY = WINDOW_HEIGHT / 2.0f;
 
 // Callback function to handle mouse input
 void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 {
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
     GLfloat xoffset = xpos - lastX;
     GLfloat yoffset = lastY - ypos; // Reversed since y-coordinates range from bottom to top
 
     lastX = xpos;
     lastY = ypos;
 
-    const GLfloat sensitivity = 0.05f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    xoffset *= CAMERA_SPEED;
+    yoffset *= CAMERA_SPEED;
 
     yaw += xoffset;
     pitch += yoffset;
 
     // Constrain pitch to prevent camera flipping
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
+    if (pitch > PITCH_CONSTRAINT)
+        pitch = PITCH_CONSTRAINT;
+    if (pitch < -PITCH_CONSTRAINT)
+        pitch = -PITCH_CONSTRAINT;
 
     // Calculate new front vector
     glm::vec3 front;
@@ -63,15 +55,14 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 // Process keyboard input to move the camera
 void processInput(GLFWwindow *window)
 {
-    GLfloat cameraSpeed = 0.05f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPosition += cameraSpeed * cameraFront;
+        cameraPosition += CAMERA_SPEED * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPosition -= cameraSpeed * cameraFront;
+        cameraPosition -= CAMERA_SPEED * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * CAMERA_SPEED;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * CAMERA_SPEED;
 }
 
 int main()
@@ -103,6 +94,7 @@ int main()
         return -1;
     }
 
+    // Load shaders
     Shaders shaders;
     GLuint shaderProgram = shaders.getShaderProgram();
 
@@ -138,7 +130,7 @@ int main()
         processInput(window);
 
         // Clear the screen
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black background
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Set up the view matrix (user-controlled view)
