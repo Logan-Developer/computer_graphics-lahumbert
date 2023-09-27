@@ -10,8 +10,6 @@
 #include "constants.h"
 #include "shaders.h"
 
-const GLfloat cameraSpeed = 0.05f;
-
 // Camera position and orientation
 glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -37,12 +35,6 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 
     yaw += xoffset;
     pitch += yoffset;
-
-    // Constrain pitch to prevent camera flipping
-    if (pitch > PITCH_CONSTRAINT)
-        pitch = PITCH_CONSTRAINT;
-    if (pitch < -PITCH_CONSTRAINT)
-        pitch = -PITCH_CONSTRAINT;
 
     // Calculate new front vector
     glm::vec3 front;
