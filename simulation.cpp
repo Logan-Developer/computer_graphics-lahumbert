@@ -47,14 +47,23 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 // Process keyboard input to move the camera
 void processInput(GLFWwindow *window)
 {
+    float cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        cameraSpeed = CAMERA_SPEED_FAST;
+    else
+        cameraSpeed = CAMERA_SPEED;
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPosition += CAMERA_SPEED * cameraFront;
+        cameraPosition += cameraSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPosition -= CAMERA_SPEED * cameraFront;
+        cameraPosition -= cameraSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * CAMERA_SPEED;
+        cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * CAMERA_SPEED;
+        cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
 int main()
