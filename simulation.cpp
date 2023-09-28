@@ -9,61 +9,22 @@
 
 #include "constants.h"
 #include "shaders.h"
+#include "camera.h"
 
-// Camera position and orientation
-glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+using namespace std;
 
-GLfloat yaw = -90.0f;
-GLfloat pitch = 0.0f;
-
-GLfloat lastX = WINDOW_WIDTH / 2.0f;
-GLfloat lastY = WINDOW_HEIGHT / 2.0f;
+Camera camera;
 
 // Callback function to handle mouse input
 void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 {
-    GLfloat xoffset = xpos - lastX;
-    GLfloat yoffset = lastY - ypos; // Reversed since y-coordinates range from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    xoffset *= CAMERA_SPEED;
-    yoffset *= CAMERA_SPEED;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    // Calculate new front vector
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(front);
+    camera.calculateFront(xpos, ypos);
 }
 
 // Process keyboard input to move the camera
 void processInput(GLFWwindow *window)
 {
-    float cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        cameraSpeed = CAMERA_SPEED_FAST;
-    else
-        cameraSpeed = CAMERA_SPEED;
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPosition += cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPosition -= cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
+    camera.moveCamera(window);
 }
 
 int main()
@@ -168,7 +129,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Set up the view matrix (user-controlled view)
-        glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+        glm::mat4 view = camera.getViewMatrix();
 
         // Use the shader program
         glUseProgram(shaderProgram);
