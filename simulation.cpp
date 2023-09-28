@@ -90,11 +90,44 @@ int main()
     Shaders shaders;
     GLuint shaderProgram = shaders.getShaderProgram();
 
-    // Define the 3D object's vertices (e.g., a simple triangle)
+    // Define the 3D object's vertices (a cube)
     GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f};
+        -1.0f, -1.0f, -1.0f, // triangle 1 : begin
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f, // triangle 1 : end
+        1.0f, 1.0f, -1.0f, // triangle 2 : begin
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f, // triangle 2 : end
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f};
 
     // Create a vertex buffer object (VBO) and vertex array object (VAO)
     GLuint VBO, VAO;
@@ -140,7 +173,7 @@ int main()
 
         // Draw the 3D object
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
         glBindVertexArray(0);
 
         // Swap the screen buffers
