@@ -134,7 +134,15 @@ int main()
         // Use the shader program
         glUseProgram(shaderProgram);
 
-        // Set the view matrix and projection matrix uniforms in the shader
+        // Set the model matrix, view matrix and projection matrix uniforms in the shader
+        GLuint modelMatrixLoc = glGetUniformLocation(shaderProgram, "modelMatrix");
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+        
+        // scale to half the size
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5f, 0.5f, 0.5f));
+
+        glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
         GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "viewMatrix");
         glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
 
