@@ -154,6 +154,16 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
         glBindVertexArray(0);
 
+        // draw the second cube
+        modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 0.5f, 0.0f));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5f, 2.0f, 0.5f));
+        
+        glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
+        glBindVertexArray(0);
+
         // Swap the screen buffers
         glfwSwapBuffers(window);
     }
