@@ -86,6 +86,8 @@ public:
     Shaders()
     {
         shaders.push_back(Shader("shaders/vertex/camera.vert.glsl", GL_VERTEX_SHADER));
+        
+        shaders.push_back(Shader("shaders/fragment/cubecolor.frag.glsl", GL_FRAGMENT_SHADER));
         loadShaders();
 
         // Create the shader program and link the vertex shader
