@@ -4,8 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "constants.hpp"
 #include "shaders.hpp"
@@ -30,6 +30,9 @@ void processInput(GLFWwindow *window)
 
 int main()
 {
+    // init rand
+    srand(time(NULL));
+
     // Initialize GLFW
     if (!glfwInit())
     {
@@ -77,6 +80,34 @@ int main()
     // Set up the projection matrix (perspective projection)
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)WINDOW_WIDTH / (GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
 
+    // Define an array to store the transformation matrices for each cube
+    std::vector<glm::mat4> cubeTransformations;
+
+    int numCubes = (rand() % NUM_CUBES_MAX) + NUM_CUBES_MIN; // Random number of cubes
+    int y = 0;                                               // Set the Y-coordinate to a common ground level
+
+    // Before the rendering loop, generate transformation matrices for cubes with variations
+    for (int i = 0; i < numCubes; i++)
+    {
+        // cube position ranges from CUBE_POS_MIN to CUBE_POS_MAX
+        int x = static_cast<int>((static_cast<float>(rand()) / RAND_MAX) * CUBE_POS_MAX) + CUBE_POS_MIN;
+        int z = static_cast<int>((static_cast<float>(rand()) / RAND_MAX) * CUBE_POS_MAX) + CUBE_POS_MIN;
+
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+        // Translate the cube to the current position
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
+
+        // Rotate the cube to a random angle between CUBE_ROT_MIN and CUBE_ROT_MAX
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(static_cast<float>(rand()) / RAND_MAX * (CUBE_ROT_MAX - CUBE_ROT_MIN) + CUBE_ROT_MIN), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // Scale the cube to a random size between CURBE_SCALE_MIN and CUBE_SCALE_MAX
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(static_cast<float>(rand()) / RAND_MAX * (CUBE_SCALE_MAX - CUBE_SCALE_MIN) + CUBE_SCALE_MIN));
+
+        // Store the transformation matrix
+        cubeTransformations.push_back(modelMatrix);
+    }
+
     // Main rendering loop
     while (!glfwWindowShouldClose(window))
     {
@@ -86,9 +117,10 @@ int main()
         // Process keyboard input to move the camera
         processInput(window);
 
-        // Clear the screen
+        // Clear the screen and enable depth testing
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black background
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
         // Set up the view matrix (user-controlled view)
         glm::mat4 view = camera.getViewMatrix();
@@ -96,35 +128,25 @@ int main()
         // Use the shader program
         glUseProgram(shaderProgram);
 
-        // Set the model matrix, view matrix and projection matrix uniforms in the shader
+        // Get the location of the model, view, and projection matrices uniforms in the shader
         GLuint modelMatrixLoc = glGetUniformLocation(shaderProgram, "modelMatrix");
-        glm::mat4 modelMatrix = glm::mat4(1.0f);
-        
-        // scale to half the size
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5f, 0.5f, 0.5f));
-
-        glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
         GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "viewMatrix");
-        glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
-
         GLuint projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+
+        // Set the projection matrix (perspective projection)
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        // Draw the 3D object
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
-        glBindVertexArray(0);
+        // Inside the rendering loop, use the precomputed transformation matrices
+        for (int i = 0; i < cubeTransformations.size(); i++)
+        {
+            glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(cubeTransformations[i]));
+            glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-        // draw the second cube
-        modelMatrix = glm::mat4(1.0f);
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 0.5f, 0.0f));
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5f, 2.0f, 0.5f));
-        
-        glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
-        glBindVertexArray(0);
+            // Draw the cube
+            glBindVertexArray(VAO);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(0);
+        }
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
