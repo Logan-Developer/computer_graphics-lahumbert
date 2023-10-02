@@ -7,9 +7,10 @@
 #include <fstream>
 #include <iostream>
 
-#include "constants.h"
-#include "shaders.h"
-#include "camera.h"
+#include "constants.hpp"
+#include "shaders.hpp"
+#include "camera.hpp"
+#include "draw.hpp"
 
 using namespace std;
 
@@ -59,45 +60,6 @@ int main()
     // Load shaders
     Shaders shaders;
     GLuint shaderProgram = shaders.getShaderProgram();
-
-    // Define the 3D object's vertices (a cube)
-    GLfloat vertices[] = {
-        -1.0f, -1.0f, -1.0f, // triangle 1 : begin
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f, // triangle 1 : end
-        1.0f, 1.0f, -1.0f, // triangle 2 : begin
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, 1.0f, -1.0f, // triangle 2 : end
-        1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, 1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, -1.0f,
-        1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, 1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, -1.0f,
-        -1.0f, 1.0f, -1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, -1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f};
 
     // Create a vertex buffer object (VBO) and vertex array object (VAO)
     GLuint VBO, VAO;

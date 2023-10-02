@@ -12,7 +12,7 @@ else
 endif
 
 
-${EXE}:${SRC} constants.h shaders.h camera.h
+${EXE}:${SRC} constants.hpp shaders.hpp camera.hpp
 	g++ ${CPPFLAGS} $< -o $@ ${LDFLAGS}
 
 clean:
