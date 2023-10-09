@@ -18,8 +18,8 @@ Camera camera;
 Draw draw;
 
 // Global light properties
-glm::vec3 lightPos(1.0f, 2.0f, 2.0f);
-glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+glm::vec3 lightPos(1.2f, 3.0f, 2.0f);
+glm::vec3 lightColor(1.0f, 1.0f, 1.0f); // White light
 
 // Callback function to handle mouse input
 void mouseCallback(GLFWwindow *window, double xpos, double ypos)
@@ -94,7 +94,7 @@ int main()
         processInput(window);
 
         // Clear the screen and enable depth testing
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black background
+        glClearColor(0.0f, 0.5f, 0.5f, 1.0f); // Black background
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
