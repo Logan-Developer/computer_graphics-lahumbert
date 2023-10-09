@@ -17,6 +17,10 @@ using namespace std;
 Camera camera;
 Draw draw;
 
+// Global light properties
+glm::vec3 lightPos(1.0f, 2.0f, 2.0f);
+glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+
 // Callback function to handle mouse input
 void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 {
@@ -104,6 +108,16 @@ int main()
         GLuint modelMatrixLoc = glGetUniformLocation(shaderProgram, "modelMatrix");
         GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "viewMatrix");
         GLuint projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+
+        // Get the location of light uniforms in the shader
+        GLuint lightPosLoc = glGetUniformLocation(shaderProgram, "lightPos");
+        GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
+        GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
+
+        // Set light uniforms
+        glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
+        glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
+        glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.getCameraPosition()));
 
         // Set up the projection matrix (perspective projection)
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)WINDOW_WIDTH / (GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);

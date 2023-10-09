@@ -81,4 +81,9 @@ public:
     {
         return glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
     }
+
+    glm::vec3 getCameraPosition()
+    {
+        return cameraPosition;
+    }
 };
