@@ -19,7 +19,6 @@ Draw draw;
 
 // Global light properties
 glm::vec3 lightPos(1.2f, 3.0f, 2.0f);
-glm::vec3 lightColor(1.0f, 1.0f, 1.0f); // White light
 
 // Callback function to handle mouse input
 void mouseCallback(GLFWwindow *window, double xpos, double ypos)
@@ -31,6 +30,16 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 void processInput(GLFWwindow *window)
 {
     camera.moveCamera(window);
+}
+
+// Function to calculate ambient color based on time of day
+glm::vec3 calculateAmbientColor(float timeOfDay)
+{
+    // Adjust these values to achieve the desired color changes
+    float ambientIntensity = sin(timeOfDay) * 0.5f + 0.5f; // Example calculation
+    glm::vec3 ambientColor = glm::vec3(ambientIntensity, ambientIntensity, ambientIntensity);
+
+    return ambientColor;
 }
 
 int main()
@@ -85,6 +94,7 @@ int main()
     draw.setupCubeTransformations();
 
     // Main rendering loop
+    float timeOfDay = 0.0f; // Initialize time of day
     while (!glfwWindowShouldClose(window))
     {
         // Poll for and process events
@@ -114,9 +124,13 @@ int main()
         GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
         GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
 
+        // Update time of day
+        timeOfDay += 0.005f;
+
         // Set light uniforms
+        glm::vec3 ambientColor = calculateAmbientColor(timeOfDay);
         glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
-        glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
+        glUniform3fv(lightColorLoc, 1, glm::value_ptr(ambientColor));
         glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.getCameraPosition()));
 
         // Set up the projection matrix (perspective projection)
