@@ -42,6 +42,21 @@ glm::vec3 calculateAmbientColor(float timeOfDay)
     return ambientColor;
 }
 
+// Function to calculate ambient color based on time of day
+glm::vec3 calculateAmbientColorSky(float timeOfDay)
+{
+    // Adjust these values to achieve the desired color changes
+    float ambientIntensity = sin(timeOfDay) * 0.5f + 0.5f; // Example calculation
+
+    // Interpolate between sky blue during the day and dark color at night
+    glm::vec3 dayColor = glm::vec3(0.53f, 0.81f, 0.98f); // Sky blue color
+    glm::vec3 nightColor = glm::vec3(0.0f, 0.0f, 0.1f); // Dark color
+
+    glm::vec3 ambientColor = glm::mix(nightColor, dayColor, ambientIntensity);
+
+    return ambientColor;
+}
+
 int main()
 {
     // init rand
@@ -103,8 +118,15 @@ int main()
         // Process keyboard input to move the camera
         processInput(window);
 
+        // Update time of day
+        timeOfDay += 0.005f;
+
+        // Calculate ambient light color based on time of day
+        glm::vec3 ambientColor = calculateAmbientColor(timeOfDay);
+        glm::vec3 ambientColorSky = calculateAmbientColorSky(timeOfDay);
+
         // Clear the screen and enable depth testing
-        glClearColor(0.0f, 0.5f, 0.5f, 1.0f); // Black background
+        glClearColor(ambientColorSky.x, ambientColorSky.y, ambientColorSky.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
@@ -124,11 +146,7 @@ int main()
         GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
         GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
 
-        // Update time of day
-        timeOfDay += 0.005f;
-
         // Set light uniforms
-        glm::vec3 ambientColor = calculateAmbientColor(timeOfDay);
         glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(ambientColor));
         glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.getCameraPosition()));
