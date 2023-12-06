@@ -39,10 +39,11 @@ GLfloat vertices[] = {
 
 class Draw
 {
-    // Define an array to store the transformation matrices for each cube
-    std::vector<glm::mat4> cubeTransformations;
+    std::vector<glm::mat4> mainCubeTransformations;
+    std::vector<glm::mat4> windowTransformations;
+
 public:
-        void setupCubeTransformations()
+    void setupCubeTransformations()
     {
         int numCubes = (rand() % NUM_CUBES_MAX) + NUM_CUBES_MIN; // Random number of cubes
         int y = 0;                                               // Set the Y-coordinate to a common ground level
@@ -56,22 +57,46 @@ public:
 
             glm::mat4 modelMatrix = glm::mat4(1.0f);
 
-            // Translate the cube to the current position
+            // Translate the main cube to the current position
             modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
 
-            // Rotate the cube to a random angle between CUBE_ROT_MIN and CUBE_ROT_MAX
+            // Rotate the main cube to a random angle between CUBE_ROT_MIN and CUBE_ROT_MAX
             modelMatrix = glm::rotate(modelMatrix, glm::radians(static_cast<float>(rand()) / RAND_MAX * (CUBE_ROT_MAX - CUBE_ROT_MIN) + CUBE_ROT_MIN), glm::vec3(0.0f, 1.0f, 0.0f));
 
-            // Scale the cube to a random size between CURBE_SCALE_MIN and CUBE_SCALE_MAX
+            // Scale the main cube to a random size between CUBE_SCALE_MIN and CUBE_SCALE_MAX
             modelMatrix = glm::scale(modelMatrix, glm::vec3(static_cast<float>(rand()) / RAND_MAX * (CUBE_SCALE_MAX - CUBE_SCALE_MIN) + CUBE_SCALE_MIN));
 
-            // Store the transformation matrix
-            cubeTransformations.push_back(modelMatrix);
+            // Store the transformation matrix for the main cube
+            mainCubeTransformations.push_back(modelMatrix);
+
+            // Iterate over each face of the main cube to add random windows
+            for (int windowIndex = 0; windowIndex < NUM_WINDOWS; windowIndex++)
+            {
+                // Generate random positions for windows relative to the main cube
+                float dx = static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f;
+                float dz = static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f;
+
+                // Translate and scale to create a smaller cube (window) relative to the main cube
+                glm::mat4 windowMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(dx, 0.0f, dz));
+                windowMatrix = glm::scale(windowMatrix, glm::vec3(0.2f, 0.2f, 0.2f));
+
+                // Apply the window transformation to the main cube's position
+                glm::mat4 finalWindowMatrix = modelMatrix * windowMatrix;
+
+                // Store the transformation matrix for the window
+                windowTransformations.push_back(finalWindowMatrix);
+            }
         }
     }
-    
-    std::vector<glm::mat4> getCubeTransformations()
+
+    // Getter methods for transformation matrices
+    std::vector<glm::mat4> getMainCubeTransformations()
     {
-        return cubeTransformations;
+        return mainCubeTransformations;
+    }
+
+    std::vector<glm::mat4> getWindowTransformations()
+    {
+        return windowTransformations;
     }
 };

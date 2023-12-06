@@ -50,7 +50,7 @@ glm::vec3 calculateAmbientColorSky(float timeOfDay)
 
     // Interpolate between sky blue during the day and dark color at night
     glm::vec3 dayColor = glm::vec3(0.53f, 0.81f, 0.98f); // Sky blue color
-    glm::vec3 nightColor = glm::vec3(0.0f, 0.0f, 0.1f); // Dark color
+    glm::vec3 nightColor = glm::vec3(0.0f, 0.0f, 0.1f);  // Dark color
 
     glm::vec3 ambientColor = glm::mix(nightColor, dayColor, ambientIntensity);
 
@@ -157,10 +157,22 @@ int main()
         // Set the projection matrix (perspective projection)
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        // Inside the rendering loop, use the precomputed transformation matrices
-        for (int i = 0; i < draw.getCubeTransformations().size(); i++)
+        // Draw the main cubes
+        for (int i = 0; i < draw.getMainCubeTransformations().size(); i++)
         {
-            glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(draw.getCubeTransformations()[i]));
+            glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(draw.getMainCubeTransformations()[i]));
+            glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+            // Draw the cube
+            glBindVertexArray(VAO);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(0);
+        }
+
+        // Draw the windows
+        for (int i = 0; i < draw.getWindowTransformations().size(); i++)
+        {
+            glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(draw.getWindowTransformations()[i]));
             glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
 
             // Draw the cube
