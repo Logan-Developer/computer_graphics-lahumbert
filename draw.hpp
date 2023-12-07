@@ -69,12 +69,16 @@ public:
             // Store the transformation matrix for the main cube
             mainCubeTransformations.push_back(modelMatrix);
 
-            // Iterate over each face of the main cube to add random windows
-            for (int windowIndex = 0; windowIndex < NUM_WINDOWS; windowIndex++)
+            // Iterate over each face of the main cube to add windows
+            int numWindows = (rand() % NUM_WINDOWSMAX) + NUM_WINDOWSMIN; // Random number of windows
+            for (int windowIndex = 0; windowIndex < numWindows; windowIndex++)
             {
-                // Generate random positions for windows relative to the main cube
-                float dx = static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f;
-                float dz = static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f;
+                // Use a fixed distance for windows
+                float windowDistance = 1.0f;
+
+                // Calculate window position based on the fixed distance
+                float dx = windowDistance * cos(static_cast<float>(windowIndex) * 2.0f * glm::pi<float>() / numWindows);
+                float dz = windowDistance * sin(static_cast<float>(windowIndex) * 2.0f * glm::pi<float>() / numWindows);
 
                 // Translate and scale to create a smaller cube (window) relative to the main cube
                 glm::mat4 windowMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(dx, 0.0f, dz));

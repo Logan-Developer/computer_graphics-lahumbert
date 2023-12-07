@@ -23,4 +23,6 @@ const float CUBE_ROT_MAX = 180.0f;
 const float CUBE_SCALE_MIN = 0.5f;
 const float CUBE_SCALE_MAX = 2.0f;
 
-const int NUM_WINDOWS = 10;
+// window generation
+const int NUM_WINDOWSMIN = 1;
+const int NUM_WINDOWSMAX = 5;
