@@ -119,7 +119,7 @@ int main()
         processInput(window);
 
         // Update time of day
-        timeOfDay += 0.005f;
+        timeOfDay += TIME_OF_DAY_INCREMENT;
 
         // Calculate ambient light color based on time of day
         glm::vec3 ambientColor = calculateAmbientColor(timeOfDay);

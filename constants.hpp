@@ -26,3 +26,6 @@ const float CUBE_SCALE_MAX = 2.0f;
 // window generation
 const int NUM_WINDOWSMIN = 1;
 const int NUM_WINDOWSMAX = 5;
+
+// Time of day
+const float TIME_OF_DAY_INCREMENT = 0.005f;
