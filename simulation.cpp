@@ -12,6 +12,9 @@
 #include "camera.hpp"
 #include "draw.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "libs/stb_image.h"
+
 using namespace std;
 
 Camera camera;
@@ -35,8 +38,7 @@ void processInput(GLFWwindow *window)
 // Function to calculate ambient color based on time of day
 glm::vec3 calculateAmbientColor(float timeOfDay)
 {
-    // Adjust these values to achieve the desired color changes
-    float ambientIntensity = sin(timeOfDay) * 0.5f + 0.5f; // Example calculation
+    float ambientIntensity = sin(timeOfDay) * 0.5f + 0.5f;
     glm::vec3 ambientColor = glm::vec3(ambientIntensity, ambientIntensity, ambientIntensity);
 
     return ambientColor;
@@ -45,13 +47,9 @@ glm::vec3 calculateAmbientColor(float timeOfDay)
 // Function to calculate ambient color based on time of day
 glm::vec3 calculateAmbientColorSky(float timeOfDay)
 {
-    // Adjust these values to achieve the desired color changes
-    float ambientIntensity = sin(timeOfDay) * 0.5f + 0.5f; // Example calculation
-
-    // Interpolate between sky blue during the day and dark color at night
-    glm::vec3 dayColor = glm::vec3(0.53f, 0.81f, 0.98f); // Sky blue color
-    glm::vec3 nightColor = glm::vec3(0.0f, 0.0f, 0.1f);  // Dark color
-
+    float ambientIntensity = sin(timeOfDay) * 0.5f + 0.5f;
+    glm::vec3 dayColor = glm::vec3(0.53f, 0.81f, 0.98f);
+    glm::vec3 nightColor = glm::vec3(0.0f, 0.0f, 0.1f);
     glm::vec3 ambientColor = glm::mix(nightColor, dayColor, ambientIntensity);
 
     return ambientColor;
@@ -59,7 +57,6 @@ glm::vec3 calculateAmbientColorSky(float timeOfDay)
 
 int main()
 {
-    // init rand
     srand(time(NULL));
 
     // Initialize GLFW
@@ -108,84 +105,97 @@ int main()
 
     draw.setupCubeTransformations();
 
+    // Load textures
+    stbi_set_flip_vertically_on_load(true);
+    int width = 0, height = 0, bpp = 0;
+    unsigned char *image_data = stbi_load("img/bricks2.jpg", &width, &height, &bpp, 0);
+
+    if (!image_data)
+    {
+        std::cerr << "Failed to load texture" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+
+    // Set texture parameters and generate mipmaps
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glActiveTexture(GL_TEXTURE0); // Activate the texture unit first before binding texture
+
+    // Generate mipmaps
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(image_data);
+
     // Main rendering loop
-    float timeOfDay = 0.0f; // Initialize time of day
+    float timeOfDay = 0.0f;
     while (!glfwWindowShouldClose(window))
     {
-        // Poll for and process events
         glfwPollEvents();
-
-        // Process keyboard input to move the camera
         processInput(window);
 
-        // Update time of day
         timeOfDay += 0.005f;
 
-        // Calculate ambient light color based on time of day
         glm::vec3 ambientColor = calculateAmbientColor(timeOfDay);
         glm::vec3 ambientColorSky = calculateAmbientColorSky(timeOfDay);
 
-        // Clear the screen and enable depth testing
         glClearColor(ambientColorSky.x, ambientColorSky.y, ambientColorSky.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        // Set up the view matrix (user-controlled view)
         glm::mat4 view = camera.getViewMatrix();
 
-        // Use the shader program
         glUseProgram(shaderProgram);
 
-        // Get the location of the model, view, and projection matrices uniforms in the shader
         GLuint modelMatrixLoc = glGetUniformLocation(shaderProgram, "modelMatrix");
         GLuint viewMatrixLoc = glGetUniformLocation(shaderProgram, "viewMatrix");
         GLuint projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
 
-        // Get the location of light uniforms in the shader
         GLuint lightPosLoc = glGetUniformLocation(shaderProgram, "lightPos");
         GLuint lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
         GLuint viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
 
-        // Set light uniforms
         glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(ambientColor));
         glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.getCameraPosition()));
 
-        // Set up the projection matrix (perspective projection)
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)WINDOW_WIDTH / (GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
-
-        // Set the projection matrix (perspective projection)
         glUniformMatrix4fv(projectionMatrixLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        // Draw the main cubes
         for (int i = 0; i < draw.getMainCubeTransformations().size(); i++)
         {
             glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(draw.getMainCubeTransformations()[i]));
             glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-            // Draw the cube
             glBindVertexArray(VAO);
             glDrawArrays(GL_TRIANGLES, 0, 36);
             glBindVertexArray(0);
         }
 
-        // Draw the windows
         for (int i = 0; i < draw.getWindowTransformations().size(); i++)
         {
             glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(draw.getWindowTransformations()[i]));
             glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-            // Draw the cube
             glBindVertexArray(VAO);
             glDrawArrays(GL_TRIANGLES, 0, 36);
             glBindVertexArray(0);
         }
 
-        // Swap the screen buffers
+        // Set texture unit for the sampler uniform
+        glUniform1i(glGetUniformLocation(shaderProgram, "gSampler"), 0);
+
         glfwSwapBuffers(window);
     }
 
-    // Clean up and exit
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 

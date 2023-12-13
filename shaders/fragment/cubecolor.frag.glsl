@@ -1,11 +1,15 @@
 #version 330 core
 in vec3 FragPos;
 in vec3 Normal;
+in vec2 TexCoord; // Corrected variable name
+
 out vec4 FragColor;
 
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
+
+uniform sampler2D gSampler;
 
 void main()
 {
@@ -19,5 +23,5 @@ void main()
     // light gray color for the object
     vec3 result = (ambient + diffuse) * vec3(0.5);
 
-    FragColor = vec4(result, 1.0);
+    FragColor = texture(gSampler, TexCoord) * vec4(result, 1.0); // Corrected variable name
 }
