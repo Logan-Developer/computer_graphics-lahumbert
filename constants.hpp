@@ -28,4 +28,4 @@ const int NUM_WINDOWSMIN = 1;
 const int NUM_WINDOWSMAX = 5;
 
 // Time of day
-const float TIME_OF_DAY_INCREMENT = 0.005f;
+const float TIME_OF_DAY_INCREMENT = 0.002f;
