@@ -18,7 +18,7 @@ Camera camera;
 Draw draw;
 
 // Global light properties
-glm::vec3 lightPos(1.2f, 3.0f, 2.0f);
+glm::vec3 lightPos(LIGHT_POS_X, LIGHT_POS_Y, LIGHT_POS_Z);
 
 // Callback function to handle mouse input
 void mouseCallback(GLFWwindow *window, double xpos, double ypos)
@@ -35,8 +35,7 @@ void processInput(GLFWwindow *window)
 // Function to calculate ambient color based on time of day
 glm::vec3 calculateAmbientColor(float timeOfDay)
 {
-    // Adjust these values to achieve the desired color changes
-    float ambientIntensity = sin(timeOfDay) * 0.5f + 0.5f; // Example calculation
+    float ambientIntensity = sin(timeOfDay) * LIGHT_AMBIENT_INTENSITY + LIGHT_AMBIENT_INTENSITY;
     glm::vec3 ambientColor = glm::vec3(ambientIntensity, ambientIntensity, ambientIntensity);
 
     return ambientColor;
@@ -46,7 +45,7 @@ glm::vec3 calculateAmbientColor(float timeOfDay)
 glm::vec3 calculateAmbientColorSky(float timeOfDay)
 {
     // Adjust these values to achieve the desired color changes
-    float ambientIntensity = sin(timeOfDay) * 0.5f + 0.5f; // Example calculation
+    float ambientIntensity = sin(timeOfDay) * LIGHT_AMBIENT_INTENSITY + LIGHT_AMBIENT_INTENSITY;
 
     // Interpolate between sky blue during the day and dark color at night
     glm::vec3 dayColor = glm::vec3(0.53f, 0.81f, 0.98f); // Sky blue color

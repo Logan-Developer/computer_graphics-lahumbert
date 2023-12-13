@@ -29,3 +29,9 @@ const int NUM_WINDOWSMAX = 5;
 
 // Time of day
 const float TIME_OF_DAY_INCREMENT = 0.002f;
+
+// Light properties
+const float LIGHT_POS_X = 1.2f;
+const float LIGHT_POS_Y = 3.0f;
+const float LIGHT_POS_Z = 2.0f;
+const float LIGHT_AMBIENT_INTENSITY = 0.5f;
